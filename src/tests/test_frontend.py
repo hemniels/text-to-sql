@@ -1,5 +1,5 @@
 import unittest
-from src.backend.app import app
+from src.nlp.app import app
 
 class BackendTestCase(unittest.TestCase):
     def setUp(self):

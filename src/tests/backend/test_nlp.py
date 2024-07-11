@@ -1,5 +1,5 @@
 import unittest
-from src.backend.nlp import text_to_sql
+from src.nlp.nlp import text_to_sql
 
 class NLPTestCase(unittest.TestCase):
     def test_text_to_sql(self):
