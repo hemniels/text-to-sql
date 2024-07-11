@@ -1,5 +1,5 @@
 from transformers import T5Tokenizer
-from dataset import TextToSQLDataset
+from nlp.tokenizer import TextToSQLDataset
 from model import TextToSQLModel
 
 def main():
