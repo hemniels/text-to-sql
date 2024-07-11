@@ -4,3 +4,4 @@ dist/
 build/
 tests/
 .env
+run_test.sh
