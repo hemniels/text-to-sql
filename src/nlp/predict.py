@@ -7,8 +7,8 @@ def load_model(model_path, tokenizer_path):
     return model, tokenizer
 
 def main():
-    model_path = 'path/to/save/model'
-    tokenizer_path = 'path/to/save/tokenizer'
+    model_path = 'model.py'
+    tokenizer_path = 'dataset.py'
 
     model, tokenizer = load_model(model_path, tokenizer_path)
 

@@ -1,17 +1,12 @@
-import json
 import torch
 from torch.utils.data import Dataset
+from datasets import load_dataset
 
 class TextToSQLDataset(Dataset):
-    def __init__(self, data_path, tokenizer, max_length=512):
-        self.data = self.load_data(data_path)
+    def __init__(self, split, tokenizer, max_length=512):
+        self.data = load_dataset('kaxap/pg-wikiSQL-sql-instructions-80k', split=split)
         self.tokenizer = tokenizer
         self.max_length = max_length
-
-    def load_data(self, data_path):
-        with open(data_path, 'r') as f:
-            data = json.load(f)
-        return data
 
     def __len__(self):
         return len(self.data)
