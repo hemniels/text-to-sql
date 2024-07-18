@@ -1,30 +1,29 @@
+# model.py
 import torch
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+import torch.nn as nn
+import numpy as np
 
-class TextToSQLModel:
-    def __init__(self, model_name='t5-small'):
-        self.tokenizer = T5Tokenizer.from_pretrained(model_name)
-        self.model = T5ForConditionalGeneration.from_pretrained(model_name)
+class Seq2SQL(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, embeddings):
+        super(Seq2SQL, self).__init__()
+        self.hidden_size = hidden_size
+        self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(embeddings))
+        self.encoder_lstm = nn.LSTM(embeddings.shape[1], hidden_size, batch_first=True)
+        self.decoder_lstm = nn.LSTM(hidden_size, hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+        self.dropout = nn.Dropout(0.3)
 
-    def train(self, dataset, batch_size=8, epochs=3, lr=5e-5):
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)
-        self.model.train()
-
-        for epoch in range(epochs):
-            for batch in data_loader:
-                optimizer.zero_grad()
-                input_ids = batch['input_ids']
-                attention_mask = batch['attention_mask']
-                labels = batch['labels']
-                outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-                loss = outputs.loss
-                loss.backward()
-                optimizer.step()
-                print(f"Epoch {epoch}, Loss: {loss.item()}")
-
-    def predict(self, text):
-        self.model.eval()
-        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-        outputs = self.model.generate(input_ids=inputs.input_ids, attention_mask=inputs.attention_mask)
-        return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+    def forward(self, input_seq, target_seq=None, teacher_forcing_ratio=0.5):
+        embedded = self.dropout(self.embedding(input_seq))
+        encoder_output, (hidden, cell) = self.encoder_lstm(embedded)
+        decoder_input = embedded[:, 0, :].unsqueeze(1)
+        outputs = torch.zeros(target_seq.size(0), target_seq.size(1), self.hidden_size).to(input_seq.device)
+        
+        for t in range(1, target_seq.size(1)):
+            decoder_output, (hidden, cell) = self.decoder_lstm(decoder_input, (hidden, cell))
+            output = self.fc(decoder_output)
+            outputs[:, t, :] = output.squeeze(1)
+            teacher_force = np.random.random() < teacher_forcing_ratio
+            decoder_input = target_seq[:, t, :].unsqueeze(1) if teacher_force else output
+            
+        return outputs
