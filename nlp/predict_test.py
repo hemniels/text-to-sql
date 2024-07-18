@@ -1,13 +1,12 @@
 
 import torch
-from nlp.model import Seq2SQL
-from nlp.predict import predict
-from tests.dataset_test import SQLDataset
-
+from model import Seq2SQL
+from dataset import SQLDataset
+from predict import predict
 # Test of prediction function
 
 if __name__ == "__main__":
-    data_path = 'data/pg-wikiSQL-sql-instructions-80k.json'
+    data_path = "kaxap/pg-wikiSQL-sql-instructions-80k"
     glove_path = 'data/glove.6B/glove.6B.50d.txt'
     input_size = 400000  # Adjust based on GloVe vocabulary size
     hidden_size = 200

@@ -5,3 +5,4 @@ build/
 .env
 run_tests.sh
 data/
+*.pth

@@ -1,12 +1,12 @@
 # dataset.py
 import json
 import numpy as np
+from datasets import load_dataset
 from torch.utils.data import Dataset
 
 class SQLDataset(Dataset):
     def __init__(self, data_path, glove_path):
-        with open(data_path, 'r') as f:
-            self.data = json.load(f)
+        self.data = load_dataset(data_path)
         self.word_to_idx, self.embeddings = self.load_glove(glove_path)
         self.tokenizer = self.tokenize
 
