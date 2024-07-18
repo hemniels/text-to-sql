@@ -1,9 +1,10 @@
 import torch.nn as nn
 import torch.optim as optim
 
-from nlp.dataset import SQLDataset
+from dataset import SQLDataset
+from train import train
+from model import Seq2SQL
 from tests.dataset_test import get_dataloader
-from src.nlp.model import Seq2SQL
 
 #Test of Training module
 
