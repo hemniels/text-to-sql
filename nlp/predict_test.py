@@ -1,9 +1,8 @@
 
 import torch
-from nlp.model import Seq2SQL
-from nlp.predict import predict
-from tests.dataset_test import SQLDataset
-
+from model import Seq2SQL
+from dataset import SQLDataset
+from predict import predict
 # Test of prediction function
 
 if __name__ == "__main__":
