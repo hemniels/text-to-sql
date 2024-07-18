@@ -4,3 +4,4 @@ dist/
 build/
 .env
 run_tests.sh
+data/
