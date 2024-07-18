@@ -1,7 +1,7 @@
 # dataset.py
 import json
 import numpy as np
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 class SQLDataset(Dataset):
     def __init__(self, data_path, glove_path):
@@ -34,13 +34,3 @@ class SQLDataset(Dataset):
         input_seq = self.tokenizer(item['input_prompt'])
         target_seq = self.tokenizer(item['sql_query'])
         return input_seq, target_seq
-
-def get_dataloader(data_path, glove_path, batch_size=32):
-    dataset = SQLDataset(data_path, glove_path)
-    return DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
-if __name__ == "__main__":
-    data_loader = get_dataloader('data/pg-wikiSQL-sql-instructions-80k.json', 'data/glove.6B/glove.6B.50d.txt')
-    for batch in data_loader:
-        print(batch)
-        break
