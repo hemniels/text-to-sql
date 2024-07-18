@@ -1,7 +1,7 @@
-from dataset import SQLDataset
+from nlp.dataset import SQLDataset
 from torch.utils.data import DataLoader
 
-# Test for SQLDataset class 
+# Test for SQLDataset class / dataloader funct
 
 def get_dataloader(data_path, glove_path, batch_size=32):
     dataset = SQLDataset(data_path, glove_path)
