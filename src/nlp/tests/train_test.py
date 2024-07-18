@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from nlp.dataset import SQLDataset
-from dataset import get_dataloader
+from tests.dataset_test import get_dataloader
 from src.nlp.model import Seq2SQL
 
 #Test of Training module

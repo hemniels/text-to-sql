@@ -2,9 +2,9 @@
 import torch
 from nlp.model import Seq2SQL
 from nlp.predict import predict
-from dataset import SQLDataset
+from tests.dataset_test import SQLDataset
 
-
+# Test of prediction function
 
 if __name__ == "__main__":
     data_path = 'data/pg-wikiSQL-sql-instructions-80k.json'

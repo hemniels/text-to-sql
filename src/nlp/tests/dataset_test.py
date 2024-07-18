@@ -1,4 +1,4 @@
-from dataset import SQLDataset
+from nlp.dataset import SQLDataset
 from torch.utils.data import DataLoader
 
 # Test for SQLDataset class / dataloader funct
