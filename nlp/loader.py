@@ -4,11 +4,7 @@ from zipfile import ZipFile
 
 
 
-class loader:
-    def dataset(url):
-        from datasets import load_dataset
-        load_dataset(url)
-            
+class loader:           
     def download_glove(save_path, embedding_size):
         glove_urls = {
             50: "http://nlp.stanford.edu/data/glove.6B.zip",
