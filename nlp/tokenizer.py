@@ -4,7 +4,7 @@ import numpy as np
 from datasets import load_dataset
 from torch.utils.data import Dataset
 
-class SQLDataset(Dataset):
+class Tokenizer(Dataset):
     def __init__(self, data_path, glove_path):
         self.data = load_dataset(data_path)
         self.word_to_idx, self.embeddings = self.load_glove(glove_path)

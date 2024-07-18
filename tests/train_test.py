@@ -1,12 +1,11 @@
 import torch.nn as nn
 import torch.optim as optim
 
-from dataset import SQLDataset
-from train import train
-from model import Seq2SQL
+from nlp.tokenizer import Tokenizer
+from nlp.model import Seq2SQL
 from tests.dataset_test import get_dataloader
 
-#Test of Training module
+#Test logic for training the Seq2SQL module
 
 if __name__ == "__main__":
     data_path = 'data/pg-wikiSQL-sql-instructions-80k.json'
@@ -16,8 +15,8 @@ if __name__ == "__main__":
     output_size = 400000  # Adjust based on output vocabulary size
     dataloader = get_dataloader(data_path, glove_path)
 
-    dataset = SQLDataset(data_path, glove_path)
+    dataset = Tokenizer(data_path, glove_path)
     model = Seq2SQL(input_size, hidden_size, output_size, dataset.embeddings)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    train(model, dataloader, criterion, optimizer, num_epochs=10)
+    Seq2SQL.train(model, dataloader, criterion, optimizer, num_epochs=10)

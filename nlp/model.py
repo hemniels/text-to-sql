@@ -1,7 +1,9 @@
-# model.py
 import torch
 import torch.nn as nn
 import numpy as np
+import torch.optim as optim
+from nlp.tokenizer import Tokenizer
+
 
 class Seq2SQL(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, embeddings):
@@ -27,3 +29,31 @@ class Seq2SQL(nn.Module):
             decoder_input = target_seq[:, t, :].unsqueeze(1) if teacher_force else output
             
         return outputs
+    
+    def train(model, dataloader, criterion, optimizer, num_epochs):
+        model.train()
+        for epoch in range(num_epochs):
+            for batch in dataloader:
+                input_seq, target_seq = batch
+                optimizer.zero_grad()
+                output = model(input_seq, target_seq)
+                loss = criterion(output.view(-1, output.shape[-1]), target_seq.view(-1))
+                loss.backward()
+                optimizer.step()
+            print(f'Epoch {epoch+1}, Loss: {loss.item()}')
+
+    def predict(model, input_prompt, tokenizer):
+        model.eval()
+        input_seq = tokenizer(input_prompt)
+        input_seq = torch.tensor(input_seq).unsqueeze(0)  # Add batch dimension
+        with torch.no_grad():
+            output = model(input_seq)
+        return output
+    
+    def load_model(path, input_size, hidden_size, output_size, embeddings):
+        model = Seq2SQL(input_size, hidden_size, output_size, embeddings)
+        model.load_state_dict(torch.load(path))
+        return model
+        
+    def save_model(model, path):
+        torch.save(model.state_dict(), path)
