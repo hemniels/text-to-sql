@@ -1,7 +1,7 @@
 
 import torch
-from nlp.model import Seq2SQL
-from nlp.tokenizer import Tokenizer
+from nlp.Seq2SQL import Seq2SQL
+from nlp.modules.tokenizer import Tokenizer
 # Test of predicting results, given prompt, from Seq2SQL model
 
 if __name__ == "__main__":

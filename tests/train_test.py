@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch.optim as optim
 
-from nlp.tokenizer import Tokenizer
-from nlp.model import Seq2SQL
+from nlp.modules.tokenizer import Tokenizer
+from nlp.Seq2SQL import Seq2SQL
 from tests.dataset_test import get_dataloader
 
 #Test logic for training the Seq2SQL module
