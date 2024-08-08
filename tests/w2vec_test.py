@@ -7,12 +7,12 @@ def test_word_embeddings():
     """
     data_path = 'path_to_wikisql_train.jsonl'  # Beispielpfad zur Datei
     embedding_dim = 100
-    w2v_model = create_w2v_embeddings(data_path, embedding_dim)
+    w2v_model = wordembeddings.create_w2v_embeddings(data_path, embedding_dim)
     
     # Prüfen, ob ein Embedding für ein häufiges Wort erzeugt werden kann
     word = 'select'
     try:
-        embedding = get_word_embedding(word, w2v_model)
+        embedding = wordembeddings.get_word_embedding(word, w2v_model)
         assert embedding.shape == (embedding_dim,)
     except ValueError as e:
         pytest.fail(str(e))
@@ -20,11 +20,11 @@ def test_word_embeddings():
     # Testen, ob unbekannte Wörter korrekt gehandhabt werden
     unknown_word = 'unknownword'
     with pytest.raises(ValueError):
-        get_word_embedding(unknown_word, w2v_model)
+        wordembeddings.get_word_embedding(unknown_word, w2v_model)
 
     # Testen der Dimension des erzeugten Embeddings
     common_word = 'where'
-    embedding = get_word_embedding(common_word, w2v_model)
+    embedding = wordembeddings.get_word_embedding(common_word, w2v_model)
     assert embedding.shape == (embedding_dim,)
 
 # Ausführen des Tests
