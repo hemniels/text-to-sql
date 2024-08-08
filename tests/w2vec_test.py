@@ -1,32 +1,46 @@
+# tests/w2vec_test.py
+
 import pytest
-from models import wordembeddings
+import torch
+from models.wordembeddings import WordEmbeddingsNet
+from utils.text_processing import preprocess_corpus, build_vocab
+from utils.downloader import load_wikisql_dataset
 
 def test_word_embeddings():
     """
     Testet die Erstellung und Qualität der Word Embeddings.
     """
-    data_path = 'path_to_wikisql_train.jsonl'  # Beispielpfad zur Datei
-    embedding_dim = 100
-    w2v_model = create_w2v_embeddings(data_path, embedding_dim)
+    # Laden des WikiSQL-Datasets
+    dataset = load_wikisql_dataset()
+    corpus = [entry['question'].split() for entry in dataset]  # Tokenisierung auf Basis von Leerzeichen
+
+    # Vorverarbeitung des Datasets und Aufbau des Vokabulars
+    processed_corpus = preprocess_corpus(corpus)
+    word_to_index, index_to_word = build_vocab(processed_corpus)
     
-    # Prüfen, ob ein Embedding für ein häufiges Wort erzeugt werden kann
-    word = 'select'
-    try:
-        embedding = get_word_embedding(word, w2v_model)
+    # Erstellen des Modells
+    vocab_size = len(word_to_index)
+    embedding_dim = 100
+    model = WordEmbeddingsNet(vocab_size, embedding_dim)
+
+    # Training des Modells
+    model.train_model(processed_corpus, word_to_index)
+    
+    # Testen der Embeddings
+    common_word = 'select'
+    if common_word in word_to_index:
+        word_index = word_to_index[common_word]
+        embedding = model.get_embedding(word_index)
         assert embedding.shape == (embedding_dim,)
-    except ValueError as e:
-        pytest.fail(str(e))
+    else:
+        pytest.fail(f"Das Wort '{common_word}' ist nicht im Vokabular enthalten.")
 
-    # Testen, ob unbekannte Wörter korrekt gehandhabt werden
+    # Testen, ob das Modell eine Ausnahme auslöst, wenn das Wort nicht im Vokabular ist
     unknown_word = 'unknownword'
-    with pytest.raises(ValueError):
-        get_word_embedding(unknown_word, w2v_model)
+    with pytest.raises(KeyError):
+        if unknown_word in word_to_index:
+            word_index = word_to_index[unknown_word]
+            model.get_embedding(word_index)
 
-    # Testen der Dimension des erzeugten Embeddings
-    common_word = 'where'
-    embedding = get_word_embedding(common_word, w2v_model)
-    assert embedding.shape == (embedding_dim,)
-
-# Ausführen des Tests
 if __name__ == "__main__":
     pytest.main([__file__])

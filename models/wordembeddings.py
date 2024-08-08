@@ -1,53 +1,72 @@
+# models/wordembeddings.py
+
 import torch
 import torch.nn as nn
-import pandas as pd
-import gensim
-from gensim.models import Word2Vec
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-import string
+import torch.optim as optim
 
-# Laden und Vorverarbeiten des WikiSQL-Datasets
-def load_and_preprocess_wikisql(data_path):
-    """
-    Laden und Vorverarbeiten des WikiSQL-Datasets.
-    """
-    data = pd.read_json(data_path, lines=True)
-    stop_words = set(stopwords.words('english'))
-    preprocessed_data = []
-    
-    for question in data['question']:
-        tokens = word_tokenize(question.lower())
-        tokens = [w for w in tokens if w not in stop_words and w not in string.punctuation]
-        preprocessed_data.append(tokens)
-    
-    return preprocessed_data
+class WordEmbeddingsNet(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, window_size=5):
+        super(WordEmbeddingsNet, self).__init__()
+        self.embedding_dim = embedding_dim
+        self.window_size = window_size
+        self.embeddings = nn.Embedding(vocab_size, embedding_dim)
+        self.optimizer = optim.SGD(self.parameters(), lr=0.01)
+        self.loss_function = nn.CrossEntropyLoss()
 
-# Trainieren des Word2Vec-Modells
-def train_word2vec(corpus, embedding_dim=100, window=5, min_count=1, epochs=10):
-    """
-    Trainieren eines Word2Vec-Modells auf dem gegebenen Korpus.
-    """
-    model = Word2Vec(sentences=corpus, vector_size=embedding_dim, window=window, min_count=min_count, sg=0)
-    model.train(corpus, total_examples=model.corpus_count, epochs=epochs)
-    return model
+    def forward(self, center_words, context_words):
+        center_embeddings = self.embeddings(center_words)
+        context_embeddings = self.embeddings(context_words)
+        scores = torch.matmul(center_embeddings, context_embeddings.t())
+        return scores
 
-# Einlesen und Erstellen von Word Embeddings für WikiSQL
-def create_w2v_embeddings(data_path, embedding_dim=100):
-    """
-    Erstellt Word Embeddings für das WikiSQL-Dataset.
-    """
-    corpus = load_and_preprocess_wikisql(data_path)
-    w2v_model = train_word2vec(corpus, embedding_dim)
-    return w2v_model
+    def train_model(self, corpus, word_to_index):
+        """
+        Trainiert das Modell auf dem gegebenen Korpus.
+        """
+        word_pairs = self.create_word_pairs(corpus, word_to_index)
+        for center, context in word_pairs:
+            center_word = torch.tensor([center], dtype=torch.long)
+            context_word = torch.tensor([context], dtype=torch.long)
 
-# Beispielnutzung
-data_path = 'path_to_wikisql_train.jsonl'
-w2v_model = create_w2v_embeddings(data_path)
+            self.optimizer.zero_grad()
+            output = self(center_word, context_word)
+            # Die Loss-Funktion erwartet, dass `context_word` der Target-Index ist
+            loss = self.loss_function(output.squeeze(0), context_word)
+            loss.backward()
+            self.optimizer.step()
 
-# Funktion, um ein einzelnes Wort in ein Embedding zu konvertieren
-def get_word_embedding(word, w2v_model):
-    if word in w2v_model.wv:
-        return torch.tensor(w2v_model.wv[word])
-    else:
-        raise ValueError(f"Word '{word}' not in vocabulary.")
+    def create_word_pairs(self, corpus, word_to_index):
+        """
+        Erstellt Paare von Wörtern für das Training, konvertiert Wörter in Indizes.
+        """
+        pairs = []
+        for sentence in corpus:
+            sentence_indices = [word_to_index[word] for word in sentence if word in word_to_index]
+            for i, center_word_idx in enumerate(sentence_indices):
+                start = max(0, i - self.window_size)
+                end = min(len(sentence_indices), i + self.window_size + 1)
+                for j in range(start, end):
+                    if i != j:
+                        context_word_idx = sentence_indices[j]
+                        pairs.append((center_word_idx, context_word_idx))
+        return pairs
+
+    def get_embedding(self, word_index):
+        """
+        Gibt das Embedding für ein Wort zurück.
+        """
+        with torch.no_grad():
+            return self.embeddings(torch.tensor([word_index], dtype=torch.long)).numpy()
+
+    def save_model(self, path):
+        """
+        Speichert das Modell.
+        """
+        torch.save(self.state_dict(), path)
+
+    def load_model(self, path):
+        """
+        Lädt ein gespeichertes Modell.
+        """
+        self.load_state_dict(torch.load(path))
+        self.eval()
