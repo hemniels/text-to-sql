@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.optim as optim
-from nlp.tokenizer import Tokenizer
+from nlp.modules.tokenizer import Tokenizer
 
 
 class Seq2SQL(nn.Module):
