@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from nlp import text_to_sql
+from models import text_to_sql
 
 app = Flask(__name__)
 
