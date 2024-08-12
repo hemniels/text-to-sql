@@ -1,3 +1,5 @@
-from .wordembeddings import WordEmbeddingsNet
+# models/__init__.py
 
-__all__ = ['WordEmbeddingsNet']
+from .agg_predictor import AggPredictor
+from .select_predictor import SelectPredictor
+from .where_predictor import WherePredictor
