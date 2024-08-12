@@ -38,10 +38,12 @@ class SQLTransformer(nn.Module):
         return self.transformer(input_ids=input_ids, attention_mask=attention_mask).logits
 
 # Training Function
-def train_model(model, dataloader, epochs=5):
+def train_model(model, dataloader, device, tokenizer, epochs=50):
     criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     
+    model.to(device)  # Move model to GPU if available
+
     for epoch in range(epochs):
         model.train()
         total_loss = 0
@@ -49,9 +51,9 @@ def train_model(model, dataloader, epochs=5):
         for batch in dataloader:
             optimizer.zero_grad()
             
-            input_ids = batch['input_ids']
-            attention_mask = batch['attention_mask']
-            labels = batch['labels']
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
             
             outputs = model(input_ids, attention_mask)
             loss = criterion(outputs.view(-1, outputs.size(-1)), labels.view(-1))
@@ -63,9 +65,9 @@ def train_model(model, dataloader, epochs=5):
         print(f'Epoch {epoch+1}, Loss: {total_loss / len(dataloader)}')
 
 # Inference Function
-def generate_prediction(question, tokenizer, model, max_len):
+def generate_prediction(question, tokenizer, model, max_len, device):
     inputs = tokenizer(question, max_length=max_len, padding='max_length', truncation=True, return_tensors='pt')
-    input_ids, attention_mask = inputs['input_ids'], inputs['attention_mask']
+    input_ids, attention_mask = inputs['input_ids'].to(device), inputs['attention_mask'].to(device)
     
     model.eval()
     with torch.no_grad():
@@ -76,24 +78,3 @@ def generate_prediction(question, tokenizer, model, max_len):
     predicted_query = tokenizer.decode(predicted_ids.squeeze().tolist(), skip_special_tokens=True)
     
     return predicted_query
-
-# Example Data
-questions = ["What is the time of the match?", "Which player scored the highest?"]
-sql_queries = ["SELECT time FROM matches", "SELECT player FROM scores WHERE points = (SELECT MAX(points) FROM scores)"]
-
-# Tokenizer and Dataset
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-num_labels = tokenizer.vocab_size  # Set this to the actual number of labels you have
-dataset = SQLDataset(questions, sql_queries, tokenizer, max_len=32)
-dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
-
-# Model
-model = SQLTransformer('bert-base-uncased', num_labels=num_labels)
-train_model(model, dataloader)
-
-# Example Inference
-question = "What is the time of the match?"
-predicted_sql = generate_prediction(question, tokenizer, model, max_len=32)
-
-print(f'Input question: {question}')
-print(f'Predicted SQL query: {predicted_sql}')
