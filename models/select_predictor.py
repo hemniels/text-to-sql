@@ -1,5 +1,3 @@
-# models/select_predictor.py
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,11 +5,10 @@ import torch.nn.functional as F
 class SelectPredictor(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, num_columns, glove_embeddings):
         super(SelectPredictor, self).__init__()
-        self.glove_embeddings = glove_embeddings
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, bidirectional=False, batch_first=True)
         self.W_sel = nn.Linear(hidden_dim, hidden_dim)
         self.V_sel = nn.Linear(hidden_dim, hidden_dim)
-        self.num_columns = num_columns
+        self.glove_embeddings = glove_embeddings
 
     def column_representations(self, col_embeddings):
         output, (hn, cn) = self.lstm(col_embeddings)

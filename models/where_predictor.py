@@ -1,5 +1,3 @@
-# models/where_predictor.py
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,36 +7,28 @@ class WherePredictor(nn.Module):
         super(WherePredictor, self).__init__()
         self.glove_embeddings = glove_embeddings
         self.hidden_dim = hidden_dim
-        self.pointer_network = nn.LSTM(hidden_dim, hidden_dim, batch_first=True)  # Example implementation
+        self.pointer_network = nn.LSTM(hidden_dim, hidden_dim, batch_first=True)
         self.W_ptr = nn.Linear(hidden_dim, hidden_dim)
         self.U_ptr = nn.Linear(hidden_dim, hidden_dim)
         self.V_ptr = nn.Linear(hidden_dim, hidden_dim)
 
     def scalar_attention(self, scores, hidden_states):
-        scores = scores.permute(0, 2, 1)  # [batch_size, hidden_dim, seq_len]
-        attention_weights = torch.bmm(scores, hidden_states.unsqueeze(2)).squeeze(2)  # [batch_size, seq_len]
-        return F.softmax(attention_weights, dim=-1)
+        attn_weights = F.softmax(scores, dim=1)
+        context = torch.bmm(attn_weights.unsqueeze(1), hidden_states).squeeze(1)
+        return context
 
-    def forward(self, input_encodings):
-        output, (hn, cn) = self.pointer_network(input_encodings)
-        hn_last = hn[-1]
-        scores = self.scalar_attention(output, hn_last)
-        return scores
-
-    def compute_reward(self, generated_query, ground_truth):
-        if not self.is_valid_sql(generated_query):
-            return -2
-        elif generated_query != ground_truth:
-            return -1
-        else:
-            return 1
-
-    def is_valid_sql(self, query):
-        # Implement a proper SQL validation here
-        return True
+    def compute_scores(self, hidden_states, query):
+        return torch.matmul(query, hidden_states.permute(0, 2, 1))
 
     def train_step(self, input_encodings, generated_query, ground_truth):
-        scores = self.forward(input_encodings)
-        reward = self.compute_reward(generated_query, ground_truth)
-        loss = -reward * torch.sum(scores)
+        hidden_states, _ = self.pointer_network(input_encodings)
+        scores = self.compute_scores(hidden_states, generated_query)
+        context = self.scalar_attention(scores, hidden_states)
+        loss = F.cross_entropy(context, ground_truth)
         return loss
+
+    def forward(self, input_encodings, generated_query):
+        hidden_states, _ = self.pointer_network(input_encodings)
+        scores = self.compute_scores(hidden_states, generated_query)
+        context = self.scalar_attention(scores, hidden_states)
+        return context
