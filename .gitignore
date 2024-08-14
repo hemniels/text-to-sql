@@ -1,9 +1,0 @@
-__pycache__/
-node_modules/
-dist/
-build/
-.env
-run_tests.sh
-data/
-*.pth
-prompts.txt
