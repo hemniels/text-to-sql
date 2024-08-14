@@ -1,0 +1,10 @@
+Error fuer t5:
+python3 t5.py
+Traceback (most recent call last):
+  File "/mnt/f/devlab/dl-project/t5.py", line 31, in <module>
+    decoded_query = decode_sql_tokens(sql_tokens)
+  File "/mnt/f/devlab/dl-project/t5.py", line 25, in decode_sql_tokens
+    sql_query = ' '.join([reverse_vocab.get(token.item(), '<UNK>') for token in tokens[0]])
+  File "/mnt/f/devlab/dl-project/t5.py", line 25, in <listcomp>
+    sql_query = ' '.join([reverse_vocab.get(token.item(), '<UNK>') for token in tokens[0]])
+AttributeError: 'str' object has no attribute 'item'
